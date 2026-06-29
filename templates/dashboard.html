@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — HireOps{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+  <div class="space-y-6">
+    <!-- Row 1: Stat cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center gap-4">
+        <div class="h-10 w-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <i data-lucide="briefcase" class="h-5 w-5"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs text-slate-500 uppercase tracking-wide">Total Jobs</p>
+          <p class="text-2xl font-semibold text-slate-900" id="dash-total-jobs">0</p>
+          <p class="text-xs text-slate-500">Active: <span id="dash-active-jobs">0</span></p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center gap-4">
+        <div class="h-10 w-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+          <i data-lucide="users" class="h-5 w-5"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs text-slate-500 uppercase tracking-wide">Total Candidates</p>
+          <p class="text-2xl font-semibold text-slate-900" id="dash-total-candidates">0</p>
+          <p class="text-xs text-slate-500">This week: <span id="dash-week-candidates">0</span></p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center gap-4">
+        <div class="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="check-circle-2" class="h-5 w-5"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs text-slate-500 uppercase tracking-wide">Shortlisted</p>
+          <p class="text-2xl font-semibold text-slate-900" id="dash-shortlisted">0</p>
+          <p class="text-xs text-slate-500"><span id="dash-accept-rate">0</span>% acceptance rate</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center gap-4">
+        <div class="h-10 w-10 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center">
+          <i data-lucide="brain" class="h-5 w-5"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs text-slate-500 uppercase tracking-wide">Avg AI Score</p>
+          <p class="text-2xl font-semibold text-slate-900" id="dash-avg-score">0</p>
+          <div class="mt-1 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+            <div id="dash-avg-score-bar" class="h-full bg-indigo-500" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Charts -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <div class="xl:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-semibold text-slate-900">Candidates Added Over Time</h2>
+        </div>
+        <canvas id="dash-line-candidates" class="w-full h-64"></canvas>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-semibold text-slate-900">Pipeline Status Distribution</h2>
+        </div>
+        <canvas id="dash-doughnut-status" class="w-full h-64"></canvas>
+      </div>
+    </div>
+
+    <!-- Row 3: Recent jobs and top candidates -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-slate-900">Recent Job Roles</h2>
+          <a href="/jobs/" class="text-xs font-medium text-indigo-600 hover:text-indigo-700">View all</a>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-xs">
+            <thead class="text-slate-500 border-b border-slate-100">
+              <tr>
+                <th class="text-left py-2 pr-4">Job</th>
+                <th class="text-left py-2 pr-4">Candidates</th>
+                <th class="text-left py-2 pr-4">Status</th>
+                <th class="text-right py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dash-recent-jobs" class="text-slate-700">
+              <!-- Filled by analytics.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-slate-900">Top Candidates</h2>
+        </div>
+        <div id="dash-top-candidates" class="space-y-3">
+          <!-- Filled by analytics.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body_extras %}
+  <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}
+

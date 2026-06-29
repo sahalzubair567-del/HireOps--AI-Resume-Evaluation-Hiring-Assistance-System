@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if job %}Edit Job — HireOps{% else %}Create Job — HireOps{% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if job %}Edit Job{% else %}Create Job{% endif %}
+{% endblock %}
+
+{% block content %}
+  <form
+    method="post"
+    class="space-y-4"
+    id="job-form"
+    data-job-form
+  >
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <h2 class="text-base font-semibold text-slate-900">
+          {% if job %}Edit Job Role{% else %}New Job Role{% endif %}
+        </h2>
+        <p class="text-xs text-slate-500">Define the role, experience range, and required skills.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Left column -->
+      <div class="lg:col-span-2 space-y-3">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-slate-700">Job Title</label>
+            <input
+              type="text"
+              name="title"
+              required
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              value="{{ job.title if job else '' }}"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-slate-700">Location</label>
+            <input
+              type="text"
+              name="location"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              value="{{ job.location if job else '' }}"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-slate-700">Description</label>
+            <textarea
+              name="description"
+              rows="4"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >{{ job.description if job else '' }}</textarea>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-slate-700">Employment Type</label>
+            {% set emp = job.employment_type if job and job.employment_type else '' %}
+            <select
+              name="employment_type"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="" {% if not emp %}selected{% endif %}>Not specified</option>
+              <option value="full-time" {% if emp == 'full-time' %}selected{% endif %}>Full-time</option>
+              <option value="part-time" {% if emp == 'part-time' %}selected{% endif %}>Part-time</option>
+              <option value="contract" {% if emp == 'contract' %}selected{% endif %}>Contract</option>
+              <option value="internship" {% if emp == 'internship' %}selected{% endif %}>Internship</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1.5">
+              <label class="text-xs font-medium text-slate-700">Min Years Experience</label>
+              <input
+                type="number"
+                name="min_experience"
+                min="0"
+                class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                value="{{ job.min_experience if job else 0 }}"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-medium text-slate-700">Max Years Experience</label>
+              <input
+                type="number"
+                name="max_experience"
+                min="0"
+                class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                value="{{ job.max_experience if job else 10 }}"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-slate-700">Status</label>
+            <select
+              name="status"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              {% set status = job.status if job else 'open' %}
+              <option value="open" {% if status == 'open' %}selected{% endif %}>Open</option>
+              <option value="paused" {% if status == 'paused' %}selected{% endif %}>Paused</option>
+              <option value="closed" {% if status == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="space-y-3">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-semibold text-slate-900">Required Skills</h3>
+              <p class="text-[0.7rem] text-slate-500">Add skills and mark how important each one is.</p>
+            </div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[0.7rem] text-slate-700 hover:bg-slate-50"
+              data-add-skill
+            >
+              <i data-lucide="plus" class="h-3 w-3"></i>
+              <span>Add Skill</span>
+            </button>
+          </div>
+
+          <div class="space-y-2" data-skill-list>
+            {% set skills = job.required_skills if job and job.required_skills else [] %}
+            {% if skills %}
+              {% for skill in skills %}
+                <div class="flex items-center gap-2" data-skill-row>
+                  <input
+                    type="text"
+                    name="skill_name[]"
+                    class="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[0.7rem] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Skill name"
+                    value="{{ skill }}"
+                  />
+                  <button
+                    type="button"
+                    class="p-1 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50"
+                    data-remove-skill
+                  >
+                    <i data-lucide="x" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              {% endfor %}
+            {% else %}
+              {% for _ in range(3) %}
+                <div class="flex items-center gap-2" data-skill-row>
+                  <input
+                    type="text"
+                    name="skill_name[]"
+                    class="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[0.7rem] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Skill name"
+                  />
+                  <button
+                    type="button"
+                    class="p-1 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50"
+                    data-remove-skill
+                  >
+                    <i data-lucide="x" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+
+          <p class="text-[0.65rem] text-slate-500">Add the skills you want to screen for.</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-2" data-job-preview>
+          <h3 class="text-xs font-semibold text-slate-900 mb-1">Job Card Preview</h3>
+          <div class="border border-slate-100 rounded-lg p-3">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <p class="text-xs font-semibold text-slate-900" data-preview-title>
+                  {{ job.title if job else "Job Title" }}
+                </p>
+                <p class="text-[0.65rem] text-slate-500" data-preview-dept>
+                  {{ job.location if job else "Location (optional)" }}
+                </p>
+              </div>
+              <span class="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[0.65rem] text-indigo-700">
+                {{ job.status|capitalize if job else "Open" }}
+              </span>
+            </div>
+            <p class="text-[0.7rem] text-slate-600 line-clamp-2" data-preview-desc>
+              {{ job.description if job else "Short summary of the role will appear here." }}
+            </p>
+            <div class="mt-2 flex flex-wrap gap-1" data-preview-skills>
+              <!-- Filled by jobs.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between pt-2">
+      <a href="/jobs/" class="text-xs text-slate-500 hover:text-slate-700">Cancel</a>
+      <button
+        type="submit"
+        class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium px-4 py-2 shadow-sm hover:bg-indigo-700"
+      >
+        <span>Save Job Role</span>
+      </button>
+    </div>
+  </form>
+{% endblock %}
+
+{% block body_extras %}
+  <script src="{{ url_for('static', filename='js/jobs.js') }}"></script>
+{% endblock %}
+

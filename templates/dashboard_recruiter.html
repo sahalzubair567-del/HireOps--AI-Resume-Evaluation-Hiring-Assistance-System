@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Recruiter Dashboard – HireOps{% endblock %}
+{% block page_title %}Recruiter Dashboard{% endblock %}
+
+{% block content %}
+  <div class="space-y-6">
+    <p class="text-slate-600">Your selections and activity.</p>
+
+    <div id="stats-cards" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
+        <div class="h-10 w-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+          <i data-lucide="eye" class="h-5 w-5"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-semibold text-slate-900" id="stat-viewed">—</p>
+          <p class="text-xs text-slate-500">Candidates Viewed</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
+        <div class="h-10 w-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <i data-lucide="send" class="h-5 w-5"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-semibold text-slate-900" id="stat-sent">—</p>
+          <p class="text-xs text-slate-500">Selections Made</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
+        <div class="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="check-circle" class="h-5 w-5"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-semibold text-slate-900" id="stat-accepted">—</p>
+          <p class="text-xs text-slate-500">Accepted</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
+        <div class="h-10 w-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+          <i data-lucide="clock" class="h-5 w-5"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-semibold text-slate-900" id="stat-pending">—</p>
+          <p class="text-xs text-slate-500">Pending</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <h2 class="font-semibold text-slate-900">Selections</h2>
+        <select id="selections-filter" class="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+          <option value="all">All</option>
+          <option value="pending">Pending</option>
+          <option value="accepted">Accepted</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+      <div id="selections-list" class="p-5">
+        <p class="text-slate-500 text-sm">Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      function get(path) {
+        return fetch(path, { credentials: "same-origin" }).then(function (r) { return r.json(); });
+      }
+
+      function renderStats(data) {
+        if (!data || !data.data) return;
+        var d = data.data;
+        var el = document.getElementById("stat-viewed");
+        if (el) el.textContent = d.candidates_viewed != null ? d.candidates_viewed : "0";
+        el = document.getElementById("stat-sent");
+        if (el) el.textContent = d.selections_made != null ? d.selections_made : "0";
+        el = document.getElementById("stat-accepted");
+        if (el) el.textContent = d.accepted != null ? d.accepted : "0";
+        el = document.getElementById("stat-pending");
+        if (el) el.textContent = d.pending != null ? d.pending : "0";
+      }
+
+      function esc(s) {
+        if (s == null || s === undefined) return "";
+        s = String(s);
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
+      function renderSelections(data) {
+        var container = document.getElementById("selections-list");
+        if (!container) return;
+        if (!data || !data.data || data.data.length === 0) {
+          container.innerHTML = "<p class=\"text-slate-500 text-sm\">No selections yet.</p>";
+          return;
+        }
+        var html = "<div class=\"space-y-3\">";
+        data.data.forEach(function (s) {
+          var status = (s.status || "pending").toLowerCase();
+          var statusClass = status === "accepted" ? "text-emerald-600" : status === "rejected" ? "text-rose-600" : "text-amber-600";
+          html += "<div class=\"flex flex-wrap items-center justify-between gap-2 py-3 border-b border-slate-100 last:border-0\">";
+          html += "<div class=\"min-w-0 flex-1\"><span class=\"font-medium text-slate-900\">" + esc(s.candidate_name || "Candidate") + "</span>";
+          html += "<p class=\"text-sm text-slate-500\">" + esc(s.job_title || "") + (s.candidate_email ? " · " + esc(s.candidate_email) : "") + "</p>";
+          html += "<p class=\"text-xs text-slate-400\">" + esc(s.selected_at || "") + "</p>";
+          html += "</div>";
+          html += "<span class=\"text-sm font-medium " + statusClass + "\">" + status + "</span>";
+          html += "</div>";
+        });
+        html += "</div>";
+        container.innerHTML = html;
+      }
+
+      function loadStats() {
+        get("/api/dashboard/recruiter/stats").then(renderStats);
+      }
+      function loadSelections(status) {
+        var q = status ? "?status=" + encodeURIComponent(status) : "";
+        get("/api/dashboard/recruiter/selections" + q).then(function (data) {
+          renderSelections(data);
+        });
+      }
+
+      document.getElementById("selections-filter").addEventListener("change", function () {
+        loadSelections(this.value);
+      });
+
+      loadStats();
+      loadSelections("all");
+
+      window.addEventListener("DOMContentLoaded", function () {
+        if (window.lucide) window.lucide.createIcons();
+      });
+    })();
+  </script>
+{% endblock %}

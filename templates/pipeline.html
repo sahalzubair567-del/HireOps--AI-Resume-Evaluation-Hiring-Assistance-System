@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Pipeline — HireOps{% endblock %}
+
+{% block page_title %}Hiring Pipeline{% endblock %}
+
+{% block content %}
+  <div class="space-y-4" data-pipeline>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <h2 class="text-base font-semibold text-slate-900">Pipeline Board</h2>
+        <p class="text-xs text-slate-500">
+          Drag candidates across stages to update their status.
+        </p>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <select
+          class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          data-pipeline-job-filter
+        >
+          <option value="" {% if not selected_job_id %}selected{% endif %}>All Job Roles</option>
+          {% if job_roles and job_roles|length > 0 %}
+            {% for j in job_roles %}
+              <option value="{{ j.id }}" {% if selected_job_id == j.id %}selected{% endif %}>
+                {{ j.title }}{% if j.location %} • {{ j.location }}{% endif %}
+              </option>
+            {% endfor %}
+          {% else %}
+            {# Fallback: derive from candidates on the page #}
+            {% set job_titles = {} %}
+            {% for c in candidates %}
+              {% if c.job and c.job.id not in job_titles %}
+                {% set _ = job_titles.update({c.job.id: c.job.title}) %}
+              {% endif %}
+            {% endfor %}
+            {% for job_id, title in job_titles.items() %}
+              <option value="{{ job_id }}" {% if selected_job_id == job_id %}selected{% endif %}>{{ title }}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+    </div>
+
+    {% set statuses = ['pending','shortlisted','interview','hired','rejected'] %}
+    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-3 text-xs">
+      {% for status in statuses %}
+        <div
+          class="flex flex-col bg-slate-50 rounded-xl border border-slate-200"
+          data-pipeline-column
+          data-status="{{ status }}"
+        >
+          <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200">
+            <span class="text-[0.7rem] font-semibold text-slate-700">
+              {{ status|capitalize }}
+            </span>
+            <span
+              class="inline-flex items-center justify-center rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] text-slate-700"
+              data-column-count
+            >
+              0
+            </span>
+          </div>
+          <div
+            class="flex-1 min-h-[120px] max-h-[480px] overflow-y-auto p-2 space-y-2"
+            data-dropzone
+            role="region"
+            tabindex="0"
+            aria-label="{{ status|capitalize }} candidates"
+          >
+            {% for c in candidates if c.status == status %}
+              <div
+                class="bg-white rounded-lg border border-slate-200 shadow-sm p-2 cursor-move flex flex-col gap-1"
+                draggable="true"
+                role="button"
+                tabindex="0"
+                aria-label="Candidate {{ c.full_name or 'Unnamed' }}"
+                data-candidate-card
+                data-candidate-id="{{ c.id }}"
+                data-job-id="{{ c.job.id if c.job else '' }}"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex flex-col">
+                    <span class="text-[0.75rem] font-medium text-slate-900 truncate">
+                      {{ c.full_name or 'Unnamed' }}
+                    </span>
+                    <span class="text-[0.6rem] text-slate-500 truncate">
+                      {{ c.job.title if c.job else '' }}
+                    </span>
+                  </div>
+                  <span
+                    class="inline-flex items-center rounded-full px-2 py-0.5 text-[0.6rem]
+                      {% if (c.ai_score or 0) >= 80 %}bg-emerald-50 text-emerald-700
+                      {% elif (c.ai_score or 0) >= 60 %}bg-sky-50 text-sky-700
+                      {% elif (c.ai_score or 0) >= 40 %}bg-amber-50 text-amber-700
+                      {% else %}bg-rose-50 text-rose-700{% endif %}"
+                  >
+                    {{ '%.0f'|format(c.ai_score or 0) }}
+                  </span>
+                </div>
+                <div class="flex items-center justify-between text-[0.6rem] text-slate-500">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="briefcase" class="h-3 w-3"></i>
+                    <span>{{ (c.parsed_data.experience_years if c.parsed_data else 0) or 0 }} yrs</span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="chevron-expand" class="h-3 w-3"></i>
+                    <span>Drag</span>
+                  </span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block body_extras %}
+  <script src="{{ url_for('static', filename='js/pipeline.js') }}"></script>
+{% endblock %}
+

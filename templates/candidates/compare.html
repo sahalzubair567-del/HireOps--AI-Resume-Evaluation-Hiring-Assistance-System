@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Compare Candidates — HireOps{% endblock %}
+
+{% block page_title %}Compare Candidates{% endblock %}
+
+{% block content %}
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-base font-semibold text-slate-900">
+        Comparing {{ candidates|length }} Candidates
+      </h2>
+      <a
+        href="javascript:history.back()"
+        class="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-800"
+      >
+        <i data-lucide="arrow-left" class="h-3 w-3"></i>
+        <span>Back</span>
+      </a>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto" data-compare-table>
+      <table class="min-w-full text-xs">
+        <tbody>
+          <!-- Row: Avatar + Name -->
+          <tr class="border-b border-slate-100">
+            <th class="sticky left-0 bg-slate-50/80 backdrop-blur px-3 py-3 text-left align-top w-40 text-[0.7rem] font-semibold text-slate-600">
+              Candidate
+            </th>
+            {% set best = (candidates | max(attribute='ai_score')) if candidates else None %}
+            {% for c in candidates %}
+              {% set is_best = best and c.ai_score == best.ai_score %}
+              <td class="px-3 py-3 align-top {% if is_best %}bg-indigo-50/60{% endif %}" data-compare-cell>
+                <div class="flex flex-col items-start gap-1">
+                  <div class="flex items-center gap-2">
+                    <div
+                      class="avatar-initials h-8 w-8 text-[0.7rem]"
+                      data-name="{{ c.full_name or 'Candidate' }}"
+                    >
+                      {{ (c.full_name or 'CA')[:2] | upper }}
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-xs font-semibold text-slate-900">
+                        {{ c.full_name or 'Unnamed' }}
+                      </span>
+                      <span class="text-[0.65rem] text-slate-500">
+                        {{ c.job.title if c.job else '' }}
+                      </span>
+                    </div>
+                  </div>
+                  {% if is_best %}
+                    <span class="inline-flex items-center mt-1 rounded-full bg-indigo-600 px-2 py-0.5 text-[0.6rem] text-white">
+                      Best Match
+                    </span>
+                  {% endif %}
+                </div>
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Row: AI Score -->
+          <tr class="border-b border-slate-100">
+            <th class="sticky left-0 bg-slate-50/80 backdrop-blur px-3 py-3 text-left align-top text-[0.7rem] font-semibold text-slate-600">
+              AI Score
+            </th>
+            {% for c in candidates %}
+              {% set score = c.ai_score or 0 %}
+              {% if score >= 80 %}
+                {% set ring_color = 'stroke-emerald-500' %}
+              {% elif score >= 60 %}
+                {% set ring_color = 'stroke-sky-500' %}
+              {% elif score >= 40 %}
+                {% set ring_color = 'stroke-amber-400' %}
+              {% else %}
+                {% set ring_color = 'stroke-rose-500' %}
+              {% endif %}
+              <td class="px-3 py-3 align-top">
+                <div class="flex flex-col items-start gap-1">
+                  <svg viewBox="0 0 64 64" class="h-20 w-20">
+                    <circle
+                      class="score-ring score-ring-track"
+                      cx="32"
+                      cy="32"
+                      r="24"
+                      fill="transparent"
+                      stroke-width="6"
+                    ></circle>
+                    <circle
+                      class="score-ring score-ring-indicator {{ ring_color }}"
+                      cx="32"
+                      cy="32"
+                      r="24"
+                      fill="transparent"
+                      stroke-width="6"
+                      stroke-dasharray="151"
+                      stroke-dashoffset="151"
+                      data-score-ring="{{ score }}"
+                    ></circle>
+                  </svg>
+                  <span class="text-xs font-semibold text-slate-900">{{ '%.0f'|format(score) }}</span>
+                  <span class="text-[0.65rem] text-slate-500">
+                    {{ c.status|capitalize }}
+                  </span>
+                </div>
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Row: Experience -->
+          <tr class="border-b border-slate-100">
+            <th class="sticky left-0 bg-slate-50/80 backdrop-blur px-3 py-2 text-left align-top text-[0.7rem] font-semibold text-slate-600">
+              Experience
+            </th>
+            {% for c in candidates %}
+              <td class="px-3 py-2 align-top text-xs text-slate-700">
+                {{ (c.parsed_data.experience_years if c.parsed_data else 0) or 0 }} years
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Row: Education -->
+          <tr class="border-b border-slate-100">
+            <th class="sticky left-0 bg-slate-50/80 backdrop-blur px-3 py-2 text-left align-top text-[0.7rem] font-semibold text-slate-600">
+              Education
+            </th>
+            {% for c in candidates %}
+              <td class="px-3 py-2 align-top text-xs text-slate-700">
+                {{ (c.parsed_data.education if c.parsed_data else None) or 'Not detected' }}
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Row: Skills Matched -->
+          <tr class="border-b border-slate-100">
+            <th class="sticky left-0 bg-slate-50/80 backdrop-blur px-3 py-2 text-left align-top text-[0.7rem] font-semibold text-slate-600">
+              Skills Matched
+            </th>
+            {% for c in candidates %}
+              {% set breakdown = c.score_breakdown or {} %}
+              {% set matched = 0 %}
+              {% for name, info in breakdown.items() %}
+                {% if info.matched %}{% set matched = matched + 1 %}{% endif %}
+              {% endfor %}
+              <td class="px-3 py-2 align-top text-xs">
+                <div class="space-y-1">
+                  <span class="text-slate-700">
+                    {{ matched }}/{{ breakdown|length }} skills
+                  </span>
+                  <div class="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      class="h-full bg-indigo-500"
+                      style="width: {{ (matched / (breakdown|length or 1)) * 100 }}%"
+                    ></div>
+                  </div>
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    {% for name, info in breakdown.items() %}
+                      {% if info.matched %}
+                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[0.6rem] text-emerald-700">
+                          {{ name }}
+                        </span>
+                      {% else %}
+                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[0.6rem] text-slate-600">
+                          {{ name }}
+                        </span>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Row: AI Summary -->
+          <tr>
+            <th class="sticky left-0 bg-slate-50/80 backdrop-blur px-3 py-2 text-left align-top text-[0.7rem] font-semibold text-slate-600">
+              AI Summary
+            </th>
+            {% for c in candidates %}
+              <td class="px-3 py-2 align-top text-[0.7rem] text-slate-700">
+                {{ (c.parsed_data.ai_summary if c.parsed_data else '') }}
+              </td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body_extras %}
+  <script src="{{ url_for('static', filename='js/compare.js') }}"></script>
+{% endblock %}
+

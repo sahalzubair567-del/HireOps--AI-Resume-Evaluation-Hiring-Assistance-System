@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Job Roles — HireOps{% endblock %}
+
+{% block page_title %}Job Roles{% endblock %}
+
+{% block content %}
+  <div class="space-y-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <h2 class="text-base font-semibold text-slate-900">All Job Roles</h2>
+        <p class="text-xs text-slate-500">Manage open positions and see candidate volume.</p>
+      </div>
+      <a
+        href="/jobs/create"
+        class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium px-4 py-2 shadow-sm hover:bg-indigo-700"
+      >
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        <span>Create New Job</span>
+      </a>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div class="relative max-w-xs w-full">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+            <i data-lucide="search" class="h-4 w-4"></i>
+          </span>
+          <input
+            type="text"
+            placeholder="Search jobs..."
+            class="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            data-global-search
+            data-jobs-search
+          />
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <select
+            class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            data-filter-status
+          >
+            <option value="">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="paused">Paused</option>
+            <option value="closed">Closed</option>
+          </select>
+          <select
+            class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            data-filter-department
+          >
+            <option value="">All Locations</option>
+            {% for job in jobs %}
+              {% if job.location %}
+                <option value="{{ job.location }}">{{ job.location }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      {% if not jobs %}
+        <div class="flex flex-col items-center justify-center py-12 text-center gap-3">
+          <div class="h-16 w-16 rounded-full bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center text-slate-400">
+            <i data-lucide="briefcase" class="h-7 w-7"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-900">No job roles yet</h3>
+          <p class="text-xs text-slate-500 max-w-sm">
+            Create your first job role to start uploading resumes and ranking candidates with AI.
+          </p>
+        </div>
+      {% else %}
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-xs" data-jobs-table>
+            <thead class="text-slate-500 border-b border-slate-100">
+              <tr>
+                <th class="text-left py-2 pr-4">Job</th>
+                <th class="text-left py-2 pr-4">Required Skills</th>
+                <th class="text-left py-2 pr-4">Experience</th>
+                <th class="text-left py-2 pr-4">Candidates</th>
+                <th class="text-left py-2 pr-4">Status</th>
+                <th class="text-left py-2 pr-4">Created</th>
+                <th class="text-right py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="text-slate-700">
+              {% for job in jobs %}
+                <tr
+                  class="border-b border-slate-50 hover:bg-slate-50/60 transition"
+                  data-job-row
+                  data-job-status="{{ job.status }}"
+                  data-job-department="{{ job.location }}"
+                >
+                  <td class="py-2 pr-4 align-top">
+                    <div class="flex flex-col">
+                      <span class="text-xs font-medium text-slate-900">{{ job.title }}</span>
+                      <span class="inline-flex items-center mt-1 max-w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] text-slate-700">
+                        {{ job.location or '—' }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="py-2 pr-4 align-top">
+                    <div class="flex flex-wrap gap-1">
+                      {% set skills = job.required_skills or [] %}
+                      {% for s in skills[:3] %}
+                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] text-slate-700">
+                          {{ s }}
+                        </span>
+                      {% endfor %}
+                      {% if skills|length > 3 %}
+                        <span class="text-[0.65rem] text-slate-500">+{{ skills|length - 3 }} more</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td class="py-2 pr-4 align-top text-xs text-slate-600">
+                    {{ job.min_experience or 0 }} - {{ job.max_experience or 0 }} yrs
+                  </td>
+                  <td class="py-2 pr-4 align-top">
+                    <a href="/jobs/{{ job.id }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                      {{ job.candidate_count or 0 }}
+                    </a>
+                  </td>
+                  <td class="py-2 pr-4 align-top">
+                    {% set status = job.status %}
+                    {% if status == 'open' %}
+                      <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[0.65rem] text-emerald-700">
+                        Open
+                      </span>
+                    {% elif status == 'paused' %}
+                      <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] text-slate-700">
+                        Paused
+                      </span>
+                    {% else %}
+                      <span class="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-[0.65rem] text-rose-700">
+                        Closed
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td class="py-2 pr-4 align-top text-xs text-slate-500">
+                    {{ job.created_at or '' }}
+                  </td>
+                  <td class="py-2 align-top text-right">
+                    <div class="inline-flex items-center gap-1">
+                      <a href="/jobs/{{ job.id }}" class="p-1.5 rounded-md hover:bg-slate-100 text-slate-500" title="View">
+                        <i data-lucide="eye" class="h-3.5 w-3.5"></i>
+                      </a>
+                      <a href="/jobs/{{ job.id }}/edit" class="p-1.5 rounded-md hover:bg-slate-100 text-slate-500" title="Edit">
+                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                      </a>
+                      <form method="post" action="/jobs/{{ job.id }}/delete" class="inline">
+                        <button
+                          type="submit"
+                          class="p-1.5 rounded-md hover:bg-rose-50 text-rose-500"
+                          data-confirm="Delete this job role?"
+                          title="Delete"
+                        >
+                          <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block body_extras %}
+  <script src="{{ url_for('static', filename='js/jobs.js') }}"></script>
+{% endblock %}
+

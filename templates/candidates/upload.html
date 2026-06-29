@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Resumes — HireOps{% endblock %}
+
+{% block page_title %}Upload Resumes{% endblock %}
+
+{% block content %}
+  <div class="space-y-4" data-job-id="{{ job.id }}">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-1">
+      <h2 class="text-base font-semibold text-slate-900">Upload resumes for {{ job.title }}</h2>
+      <p class="text-xs text-slate-500">
+        Drag &amp; drop PDF or DOCX resumes below. AI will analyze and score each candidate.
+      </p>
+    </div>
+
+    <form
+      id="upload-form"
+      method="post"
+      enctype="multipart/form-data"
+      class="space-y-4"
+      data-upload-form
+    >
+      <!-- Upload area -->
+      <div
+        class="bg-white rounded-xl border-2 border-dashed border-slate-300 shadow-sm p-6 flex flex-col items-center justify-center text-center gap-3 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/40"
+        data-dropzone
+      >
+        <div class="h-12 w-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <i data-lucide="file-up" class="h-6 w-6"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-slate-900">Drag &amp; drop resumes here</p>
+          <p class="text-xs text-slate-500">
+            Supports PDF and DOCX • Max 20 files
+          </p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white text-xs font-medium px-4 py-2 shadow-sm hover:bg-indigo-700"
+          data-browse-button
+        >
+          <i data-lucide="folder-open" class="h-3.5 w-3.5"></i>
+          <span>Browse Files</span>
+        </button>
+        <input
+          type="file"
+          name="resumes"
+          id="resumes-input"
+          multiple
+          accept=".pdf,.docx"
+          class="hidden"
+        />
+      </div>
+
+      <!-- Selected files list -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-semibold text-slate-900">Selected Files</h3>
+          <span class="text-[0.65rem] text-slate-500" data-file-count>0 files selected</span>
+        </div>
+        <ul class="divide-y divide-slate-100 text-xs" data-file-list>
+          <!-- Filled by upload.js -->
+        </ul>
+      </div>
+
+      <!-- Progress section -->
+      <div
+        class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3 hidden"
+        data-progress-section
+      >
+        <h3 class="text-xs font-semibold text-slate-900">Analyzing Resumes with AI...</h3>
+        <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div
+            class="h-full bg-indigo-500 transition-all duration-300"
+            style="width:0%"
+            data-progress-bar
+          ></div>
+        </div>
+        <p class="text-[0.65rem] text-slate-500">
+          Processed <span data-progress-count>0</span>/<span data-progress-total>0</span> resumes.
+        </p>
+        <ul class="space-y-1 text-[0.65rem]" data-progress-items></ul>
+        <div
+          class="hidden mt-2 flex items-center justify-between text-[0.7rem] text-emerald-600"
+          data-progress-complete
+        >
+          <span>All resumes analyzed successfully.</span>
+          <a
+            href="/jobs/{{ job.id }}"
+            class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-1 text-[0.7rem] text-emerald-700 hover:bg-emerald-100"
+          >
+            <span>View Candidates</span>
+            <i data-lucide="arrow-right" class="h-3 w-3"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end">
+        <button
+          type="submit"
+          class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium px-4 py-2 shadow-sm hover:bg-indigo-700"
+        >
+          <span>Start Analysis</span>
+        </button>
+      </div>
+    </form>
+  </div>
+{% endblock %}
+
+{% block body_extras %}
+  <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}
+

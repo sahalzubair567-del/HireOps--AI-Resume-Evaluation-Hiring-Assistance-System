@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Apply — HireOps</title>
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-slate-50 to-indigo-100"
+    style="font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
+  >
+    <div class="max-w-xl w-full px-4 py-8">
+      <div class="bg-white/95 shadow-xl rounded-2xl border border-indigo-50 p-6 space-y-4">
+        <div class="flex items-start gap-3">
+          <div
+            class="h-10 w-10 rounded-2xl bg-indigo-500 flex items-center justify-center text-white shadow-md"
+          >
+            <i data-lucide="file-text" class="h-5 w-5"></i>
+          </div>
+          <div class="space-y-1">
+            <h1 class="text-lg font-semibold text-slate-900">
+              Apply for {{ job.title }}
+            </h1>
+            <p class="text-xs text-slate-500">
+              Upload your resume directly. A recruiter will review it inside HireOps.
+            </p>
+          </div>
+        </div>
+
+        <form
+          id="public-upload-form"
+          method="post"
+          enctype="multipart/form-data"
+          class="space-y-4"
+          data-upload-form
+          data-upload-endpoint="/candidates/apply/{{ job.id }}"
+        >
+          <div
+            class="bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 p-6 flex flex-col items-center justify-center text-center gap-3 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/40"
+            data-dropzone
+          >
+            <div class="h-10 w-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <i data-lucide="upload-cloud" class="h-5 w-5"></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-900">Upload your resume</p>
+              <p class="text-xs text-slate-500">
+                Supports PDF and DOCX • Max 20 files
+              </p>
+            </div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white text-xs font-medium px-4 py-2 shadow-sm hover:bg-indigo-700"
+              data-browse-button
+            >
+              <i data-lucide="folder-open" class="h-3.5 w-3.5"></i>
+              <span>Browse Files</span>
+            </button>
+            <input
+              type="file"
+              name="resumes"
+              id="resumes-input"
+              multiple
+              accept=".pdf,.docx"
+              class="hidden"
+            />
+          </div>
+
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-semibold text-slate-900">Selected Files</h3>
+              <span class="text-[0.65rem] text-slate-500" data-file-count>0 files selected</span>
+            </div>
+            <ul class="divide-y divide-slate-100 text-xs" data-file-list></ul>
+          </div>
+
+          <div
+            class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3 hidden"
+            data-progress-section
+          >
+            <h3 class="text-xs font-semibold text-slate-900">Uploading...</h3>
+            <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-indigo-500 transition-all duration-300"
+                style="width:0%"
+                data-progress-bar
+              ></div>
+            </div>
+            <p class="text-[0.65rem] text-slate-500">
+              Uploaded <span data-progress-count>0</span>/<span data-progress-total>0</span> resumes.
+            </p>
+            <ul class="space-y-1 text-[0.65rem]" data-progress-items></ul>
+            <div
+              class="hidden mt-2 flex items-center justify-between text-[0.7rem] text-emerald-600"
+              data-progress-complete
+            >
+              <span>Thank you! Your resume has been submitted.</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end">
+            <button
+              type="submit"
+              class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium px-4 py-2 shadow-sm hover:bg-indigo-700"
+            >
+              <span>Submit Resume</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      });
+    </script>
+  </body>
+</html>
+
